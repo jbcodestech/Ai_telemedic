@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Dashboard{% endblock %}
+
+{% block content %}
+    <h2>Welcome, Dr. {{ user[1] }}</h2>
+
+    <hr>
+
+    <h3>Add New Availability Slot</h3>
+    <form id="add-slot-form">
+        <label>Start Time: <input type="datetime-local" id="start_time" required></label><br>
+        <label>End Time: <input type="datetime-local" id="end_time" required></label><br>
+        <label>Location: <input type="text" id="location" required></label><br>
+        <label>Notes: <input type="text" id="notes"></label><br>
+        <button type="submit">Add Slot</button>
+    </form>
+
+    <hr>
+
+    <h3>Your Available Slots</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Location</th>
+                <th>Notes</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for slot in slots %}
+            <tr>
+                <td>{{ slot[2].strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ slot[3].strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ slot[4] }}</td>
+                <td>{{ slot[5] }}</td>
+                <td>
+                    {% if slot[6] %}
+                        Booked
+                    {% else %}
+                        Available
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <hr>
+    
+    <h3>Your Appointments</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Patient Name</th>
+                <th>Booking Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appointment in appointments %}
+            <tr>
+                <td>{{ appointment[2] }}</td>
+                <td>{{ appointment[1].strftime('%Y-%m-%d %H:%M') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}
+<style>
+    body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+    overflow: hidden;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+header {
+    background: #333;
+    color: #fff;
+    padding-top: 20px;
+    min-height: 70px;
+    border-bottom: #0779e4 3px solid;
+    margin-bottom: 20px;
+}
+
+header a {
+    color: #fff;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-size: 16px;
+    padding: 0 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+input[type="text"], input[type="password"], input[type="datetime-local"], select {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0 10px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #0779e4;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: auto;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    // Doctor Portal functionality
+    const addSlotForm = document.getElementById('add-slot-form');
+    if (addSlotForm) {
+        addSlotForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const start_time = document.getElementById('start_time').value;
+            const end_time = document.getElementById('end_time').value;
+            const location = document.getElementById('location').value;
+            const notes = document.getElementById('notes').value;
+
+            const response = await fetch('/api/add_slot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ start_time, end_time, location, notes })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            if (result.status === 'success') {
+                window.location.reload();
+            }
+        });
+    }
+
+    // Patient Portal functionality
+    document.querySelectorAll('.book-btn').forEach(button => {
+        button.addEventListener('click', async (event) => {
+            const slotId = event.target.dataset.slotId;
+            const response = await fetch(`/api/book_slot/${slotId}`, {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            if (result.status === 'success') {
+                window.location.reload();
+            }
+        });
+    });
+});
+</script>
